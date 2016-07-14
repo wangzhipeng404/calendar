@@ -1,0 +1,50 @@
+<!doctype html>
+<html>
+
+<head>
+    <meta charset="utf-8" />
+    <style>
+        .actived-cell  {
+            background-color: blue;
+        }
+    </style>
+    <script type="text/javascript" src="calendar.js"></script>
+    <script type="text/javascript">
+    function showCalendar(){
+        var c = new Calendar('calendar',{
+            'date': new Date(), //创建日历的基本日期
+            'info': {  //日期的信息
+                'date20160706':{'价格': 100, '数量': 100},
+                'date20160806':{'价格': 100, '数量': 100}
+            },
+            'callback': function(node,date) { //日历点击事件
+                    var nodeClass = node.classList;
+                    var y = date.getFullYear();
+                    var m = date.getMonth() + 1;
+                    var d = date.getDate();
+                    m = m < 10 ? '0' + m : m;
+                    d = d < 10 ? '0' + d : d;
+                    var id =  'date' + y + m + d;
+                    console.log(id)
+                    console.log(nodeClass)
+                    if(nodeClass.contains('actived-cell')) {
+                        nodeClass.remove('actived-cell')
+                    } else {
+                        nodeClass.add('actived-cell')
+                    }
+                },
+            'scense': 'set' //使用场景
+        });
+        c.getDate = function(event){
+            alert(new Date(this.getAttribute('date')).toLocaleString());
+        };
+       c.showUI();
+   }
+    </script>
+</head>
+
+<body onload="showCalendar()">
+    <div id="calendar" style="width:600px; height:450px;border:1px solid red;position: relative;"></div>
+</body>
+
+</html>
