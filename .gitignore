@@ -1,7 +1,7 @@
-vue_notebook/.DS_Store
-vue_notebook/node_modules/
-vue_notebook/dist/
-vue_notebook/npm-debug.log
-vue_notebook/selenium-debug.log
-vue_notebook/test/unit/coverage
-vue_notebook/test/e2e/reports
+*/.DS_Store
+*/node_modules/
+*/dist/
+*/npm-debug.log
+*/selenium-debug.log
+*/test/unit/coverage
+*/test/e2e/reports
