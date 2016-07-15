@@ -1,6 +1,6 @@
 <template>
-  <div class="container clearfix">
-    <div id="calendar-wrap">
+  <div class="container ">
+    <div id="calendar-wrap" v-show="show === 'calendar'">
       <div class="calendar-header">
         <span class="pre-month" v-on:click="pre_month"><</span>
         <span>{{current_year}}年{{current_month + 1}}月</span>
@@ -11,31 +11,33 @@
           {{item}}
         </div >
         <div v-for="day in month_arr.date" class="" v-on:click="update_date(day)">
-          <div v-if="is_same_day(day)" class="cell-dom current-date">
-            <span v-if="$index < month_arr.preLen || $index >= month_arr.preLen + month_arr.currentLen" class="disable">
-              {{day.getDate()}}
-            </span>
-            <span v-else>
-              {{day.getDate()}}
-            </span>
-          </div>
-          <div v-else class="cell-dom">
-            <span v-if="$index < month_arr.preLen || $index >= month_arr.preLen + month_arr.currentLen" class="disable">
-              {{day.getDate()}}
-            </span>
-            <span v-else>
-              {{day.getDate()}}
-            </span>
+          <div class="cell-dom" v-bind:class="{
+            'current-date': is_same_day(day),
+            'disable': $index < month_arr.preLen || $index >= month_arr.preLen + month_arr.currentLen,
+            'has-note': has_note(day)
+            }
+            ">
+            {{day.getDate()}}
           </div>
         </div >
       </div>
     </div>
     <div id="note-wrap">
-      <div class="note-input">
-        <textarea v-model="current_note" v-on:keyup="update_note" ></textarea>
+      <div class="note-input" v-show="show === 'edit'">
+        <div class="clearfix header-nav">
+          <div class="btn edit-cancel pull-left" v-on:click="show_note()">取消</div>
+          <div class="btn edit-sure pull-right" v-on:click="save_note()">保存</div>
+          <div class="clearfix"></div>
+        </div>
+        <p class="clearfix"><textarea v-model="current_note" ></textarea></p>
       </div>
-      <div class="note-content">
-        {{current_note}}
+      <div class="note-content" v-show="show === 'note'">
+        <div class="header-nav">
+          <div class="btn back-btn pull-left" v-on:click="show_calendar()">返回</div>
+          <div class="btn edit-btn pull-right" v-on:click="show_edit()">编辑</div>
+          <div class="clearfix"></div>
+        <div>
+        <p>{{current_note ? current_note : '无'}}</p>
       </div>
     </div>
   </div>
@@ -44,7 +46,6 @@
 <script>
 let storage = window.localStorage
 let noteStorage = storage.getItem('notes') ? JSON.parse(storage.getItem('notes')) : {}
-console.log(noteStorage)
 let monthPanel = function (date) {
   var myDate = date || new Date()
   var year = myDate.getFullYear()
@@ -99,7 +100,8 @@ export default {
       notes: noteStorage,
       current_date: today,
       current_id: currentId,
-      current_note: currentNote
+      current_note: currentNote,
+      show: 'calendar'
     }
   },
   methods: {
@@ -111,6 +113,7 @@ export default {
       let id = this.create_id(date)
       this.current_date = date
       this.current_note = this.notes[id]
+      this.show = 'note'
     },
     update_note: function () {
       let id = this.create_id(this.current_date)
@@ -138,6 +141,29 @@ export default {
     },
     is_same_day: function (date) {
       return date.toDateString() === this.current_date.toDateString()
+    },
+    has_note: function (date) {
+      let id = this.create_id(date)
+      if (this.notes[id]) {
+        return true
+      } else {
+        return false
+      }
+    },
+    show_calendar: function () {
+      this.show = 'calendar'
+    },
+    show_edit: function () {
+      this.show = 'edit'
+    },
+    show_note: function () {
+      this.show = 'note'
+    },
+    save_note: function () {
+      let id = this.create_id(this.current_date)
+      this.notes[id] = this.current_note
+      this.show_note()
+      storage.setItem('notes', JSON.stringify(this.notes))
     }
   }
 }
@@ -145,10 +171,22 @@ export default {
 
 <!-- Add "scoped" attribute to limit CSS to this component only -->
 <style scoped>
-.clearfix:befor,
-.clearfix:after {
+.pull-left {
+  float: left;
+}
+.pull-right {
+  float: right;
+}
+.clearfix {
   clear: both;
-  content: '';
+}
+.clearfix::befor,
+.clearfix::after {
+  content:".";
+  display:block;
+  height:0;
+  clear:both;
+  visibility:hidden
 }
 .current-date {
   background-color: #42b983;
@@ -156,26 +194,38 @@ export default {
 .disable {
   color: #BFBFBF;
 }
+.has-note {
+  color: red;
+}
 .container {
-  width: 80%;
-  height: 100%;
-  margin-top: 50px;
+  display: border-box;
+  width: 100%;
+  max-width: 500px;
   margin-left: auto;
   margin-right: auto;
 }
-#calendar-wrap, #note-wrap {
-  float: left;
-  position: relative;
-}
 #calendar-wrap {
-  width: 30%;
+  width: 100%;
+  height: 80%;
 }
 #note-wrap {
-  width: 60%;
+  width: 100%;
   height: 100%;
 }
+.btn {
+  border: 1px solid #ccc;
+  border-radius: 3px;
+  padding: 5px 15px;
+  color: #333;
+}
+.header-nav {
+  padding:5px 0;
+}
+.calendar-header {
+  font-size: 20px;
+}
 .pre-month, .next-month {
-  padding: 5px;
+  padding: 10px;
 }
 .cell-dom {
   width: 14%;
@@ -183,16 +233,16 @@ export default {
   padding:15px 0;
   border-bottom: 1px solid #ccc;
 }
-#note-wrap textarea, #note-wrap .note-content {
-  width: 45%;
-  min-height: 360px;
+#note-wrap .note-input, #note-wrap .note-content {
+  width: 100%;
+  height: 100%;
   display: block;
-  float: left;
   text-align: left;
 }
-#note-wrap .note-content {
-  margin-left: 5%;
-  border-left: 1px solid #ccc;
-  border-right: 1px solid #ccc;
+.note-input textarea {
+  width: 100%;
+  min-height: 450px;
+  margin: 0;
+  padding: 0;
 }
 </style>
